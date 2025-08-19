@@ -9,7 +9,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Swift Account</title>
+    <title>Bundle</title>
     <link rel="icon" type="image/x-icon" href="images/favicon.ico">
 
     
@@ -58,7 +58,7 @@
             <?php } ?>
 
             <div class="input-box">
-                <input type="text" name="name" placeholder="ชื่อผู้ใช้" required>
+                <input type="text" name="username" placeholder="ชื่อผู้ใช้" required>
                 <i class='bx bxs-user' ></i>
             </div>
 
