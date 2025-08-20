@@ -1,4 +1,5 @@
-          <?php
+ <?php
+ session_start();
   require_once 'db.php';
 ?>
 
@@ -31,14 +32,53 @@
 
         <!-- animated css -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
+        <link rel="icon" type="image/x-icon" href="images/favicon.ico">
+
+         <!-- sweetalert -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
       
       </head>
 <body>
 
+
+<!-- php session -->
+<?php
+    if (isset($_SESSION['user_login'])){
+        $user_id = $_SESSION['user_login'];
+        $stmt = $conn->query("SELECT * FROM user WHERE id_user = $user_id");
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+?>
+
+<?php if(isset($_SESSION['error'])) { ?>
+                <script>
+                    Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: '<?php echo $_SESSION['error']; unset($_SESSION['error']);?>',
+                    })
+                </script>
+                <?php unset($_SESSION['error']); ?>
+            <?php } ?>
+            <?php if(isset($_SESSION['success'])) { ?>
+                <script>
+                    Swal.fire({
+                    icon: 'success',
+                    title: 'สำเร็จ',
+                    text: '<?php echo $_SESSION['success']; unset($_SESSION['success']);?>',
+                    })
+                </script>
+                <?php unset($_SESSION['success']); ?>
+            <?php } ?>
+
+<!-- End php session -->
+
 <!-- Navbar -->
     <nav class="navbar navbar-expand-lg fixed-top">
     <div class="container-fluid">
-    <a class="navbar-brand me-auto" href="#"><img src="images/logo.PNG" class="repimg"></a>
+    <a class="navbar-brand me-auto" href="#"><img src="images/logo.PNG" width="120px" class="repimg"></a>
     
     <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
       <div class="offcanvas-header">
@@ -54,13 +94,47 @@
             <a class="nav-link mx-lg-2" href="top.php"><font>อันดับหนัง</font></a>
           </li>
           <li class="nav-item">
+            
             <a class="nav-link mx-lg-2" href="rating.php"><font>ให้คะแนน</font></a>
           </li>
-          
         </ul>
       </div>
     </div>
-    <a href="login.php" class="login-button" ><font>เข้าสู่ระบบ</font></a>
+
+    <?php if (!empty($_SESSION['user_login'])): ?>
+            <span class="me-2 text-white">
+          สวัสดี,  <?php echo $row['username'];  ?>
+        </span>
+        <form method="post" action="logout.php" class="m-0 d-inline">
+          <a href="logout.php" class="login-button" ><font>ออกจากระบบ</font></a>
+        </form>
+      <?php else: ?>
+        <a href="login.php" class="login-button" ><font>เข้าสู่ระบบ</font></a>
+    <?php endif; ?>
+
+
+    <?php if(isset($_SESSION['error'])) { ?>
+                <script>
+                    Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: '<?php echo $_SESSION['error']; unset($_SESSION['error']);?>',
+                    })
+                </script>
+                <?php unset($_SESSION['error']); ?>
+            <?php } ?>
+            <?php if(isset($_SESSION['success'])) { ?>
+                <script>
+                    Swal.fire({
+                    icon: 'success',
+                    title: 'สำเร็จ',
+                    text: '<?php echo $_SESSION['success']; unset($_SESSION['success']);?>',
+                    })
+                </script>
+                <?php unset($_SESSION['success']); ?>
+            <?php } ?>
+
+    
     <button class="navbar-toggler pe-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -76,52 +150,30 @@
 
   <div class="row g-4">
 
-    <!-- Card -->
+  <?php
+     $stmt = $conn->query("SELECT * FROM movies");
+    $stmt->execute();
+    while ($rowmovie = $stmt->fetch(PDO::FETCH_ASSOC)) {
+?>
+
     <!-- Card -->
 <div class="col-12 col-md-6 col-lg-4">
   <div class="card movie-card2 h-100">
     <!-- โปสเตอร์ -->
     <div class="poster ratio ratio-16x9">
-      <img src="images/ban1.jpg" alt="The Dark Knight">
+      <img src="<?php echo $rowmovie['poster_url']; ?>" alt="<?php echo $rowmovie['title']; ?>">
     </div>
 
     <div class="card-body">
-      <h5 class="card-title mb-1">The Dark Knight</h5>
-      <div class="text-muted small mb-2">2008 • แอคชั่น, ระทึกขวัญ</div>
+      <h5 class="card-title mb-1"><?php echo $rowmovie['title']; ?></h5>
+      <div class="text-muted small mb-2"><?php echo $rowmovie['year']; ?> • <?php echo $rowmovie['genre']; ?></div>
       <button
         class="btn btn-danger btn-sm btn-rate"
         data-bs-toggle="modal"
         data-bs-target="#ratingModal"
-        data-movie-id="1"
-        data-movie-title="The Dark Knight"
-        data-poster="images/ban1.jpg" 
-        data-current-rating="0"
-      >
-        ⭐ ให้คะแนน
-      </button>
-    </div>
-  </div>
-</div>
-
-
-    <!-- อีกใบ -->
-    <div class="col-12 col-md-6 col-lg-4">
-  <div class="card movie-card2 h-100">
-    <!-- โปสเตอร์ -->
-    <div class="poster ratio ratio-16x9">
-      <img src="images/ban2.jpg" alt="The Dark Knight">
-    </div>
-
-    <div class="card-body">
-      <h5 class="card-title mb-1">The Dark Knight</h5>
-      <div class="text-muted small mb-2">2008 • แอคชั่น, ระทึกขวัญ</div>
-      <button
-        class="btn btn-danger btn-sm btn-rate"
-        data-bs-toggle="modal"
-        data-bs-target="#ratingModal"
-        data-movie-id="1"
-        data-movie-title="The Dark Knight"
-        data-poster="images/ban2.jpg" 
+        data-movie-id="<?php echo $rowmovie['id']; ?>"
+        data-movie-title="<?php echo $rowmovie['title']; ?>"
+        data-poster="<?php echo $rowmovie['poster_url']; ?>" 
         data-current-rating="0"
       >
         ⭐ ให้คะแนน
@@ -131,32 +183,9 @@
 </div>
 
     <!-- อีกใบ -->
-
-
-    <div class="col-12 col-md-6 col-lg-4">
-  <div class="card movie-card2 h-100">
-    <!-- โปสเตอร์ -->
-    <div class="poster ratio ratio-16x9">
-      <img src="images/ban3.jpg" alt="The Dark Knight">
-    </div>
-
-    <div class="card-body">
-      <h5 class="card-title mb-1">The Dark Knight</h5>
-      <div class="text-muted small mb-2">2008 • แอคชั่น, ระทึกขวัญ</div>
-      <button
-        class="btn btn-danger btn-sm btn-rate"
-        data-bs-toggle="modal"
-        data-bs-target="#ratingModal"
-        data-movie-id="1"
-        data-movie-title="The Dark Knight"
-        data-poster="images/ban3.jpg"  
-        data-current-rating="0"
-      >
-        ⭐ ให้คะแนน
-      </button>
-    </div>
-  </div>
-</div>
+<?php
+}
+?>
 
   </div>
 </section>
@@ -253,20 +282,30 @@ document.addEventListener('DOMContentLoaded', () => {
     if(Number(form.get('rating')) === 0){ alert('กรุณาเลือกดาว'); return; }
 
     try{
-      const res = await fetch('rate.php', { method:'POST', body: form });
-      const data = await res.json(); // {ok:true, rating:4}
-      if(data.ok){
-        // ปิดโมดัล
+      const res = await fetch('rate_db.php', { method:'POST', body: form });
+      const data = await res.json();
+      if (data.ok) {
         const modal = bootstrap.Modal.getInstance(ratingModal);
         modal.hide();
-        // อัปเดตค่าในปุ่มต้นทาง (ให้ครั้งถัดไปแสดง current rating)
         const btn = document.querySelector(`.btn-rate[data-movie-id="${form.get('movie_id')}"]`);
-        if(btn){ btn.dataset.currentRating = data.rating; }
-      }else{
-        alert(data.message || 'บันทึกไม่สำเร็จ');
-      }
+        if (btn) btn.dataset.currentRating = data.rating;
+
+    // แจ้งเตือนสำเร็จทันที
+    Swal.fire({
+      icon: 'success',
+      title: 'สำเร็จ',
+      text: data.message || 'บันทึกคะแนนเรียบร้อยแล้ว'
+    });
+  } else {
+    Swal.fire({
+      icon: 'error',
+      title: 'บันทึกไม่สำเร็จ',
+      text: data.message || 'กรุณาลองใหม่อีกครั้ง'
+    });
+  }
+
     }catch(err){
-      alert('เกิดข้อผิดพลาดในการบันทึก');
+      Swal.fire({ icon:'error', title:'เกิดข้อผิดพลาด', text:'ติดต่อเซิร์ฟเวอร์ไม่สำเร็จ' });
       console.error(err);
     }
   });

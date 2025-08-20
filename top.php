@@ -1,5 +1,5 @@
-          <?php
-          session_start();
+ <?php
+ session_start();
   require_once 'db.php';
 ?>
 
@@ -38,7 +38,6 @@
       </head>
 <body>
 
-
 <!-- php session -->
 <?php
     if (isset($_SESSION['user_login'])){
@@ -47,29 +46,6 @@
         $stmt->execute();
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
     }
-$GENRES = [
-  'drama'        => 'ดราม่า',
-  'action'       => 'แอคชั่น',
-  'scifi'        => 'ไซไฟ',
-  'horror'       => 'สยองขวัญ',
-  'adventure'    => 'ผจญภัย',
-  'comedy'       => 'ตลก',
-  'thriller'     => 'ระทึกขวัญ',
-  'romance'      => 'โรแมนติก',
-  'experimental' => 'แนวการทดลอง',
-  'sitcom'       => 'คอมเมดี้',
-  'performance'  => 'การแสดงผลงาน',
-  'job'          => 'การจ้างงาน',
-];
-
-$slug = $_GET['g'] ?? '';
-if (!isset($GENRES[$slug])) {
-  http_response_code(404);
-  echo "<h2 style='color:#fff'>ไม่พบหมวดหมู่</h2>";
-  exit;
-}
-$genreName = $GENRES[$slug];
-
 ?>
 
 <?php if(isset($_SESSION['error'])) { ?>
@@ -93,9 +69,6 @@ $genreName = $GENRES[$slug];
                 <?php unset($_SESSION['success']); ?>
             <?php } ?>
 
-  
-
-  
 <!-- End php session -->
 
 <!-- Navbar -->
@@ -146,50 +119,64 @@ $genreName = $GENRES[$slug];
 <br><br>
 
 <!-- Start Popular -->
- <section class="genre-list">
-  <div class="list-header">
-    <a href="index.php" class="back-link"><i class="fa-solid fa-arrow-left"></i> กลับ</a>
-    <h2>หมวดหมู่: <span><?php echo $genreName ?></span></h2>
-    <p class="subtitle">ค้นพบภาพยนตร์ที่น่าสนใจ</p>
-  </div>
+<section class="container-xl ranking-page my-4">
+ <?php
+// ดึงทุกเรื่อง + คะแนนเฉลี่ย/จำนวนโหวต
+$sql = "
+  SELECT
+    m.id,
+    m.title,
+    m.year,
+    m.genre,
+    m.poster_url,
+    ROUND(AVG(r.rate), 2) AS avg_score,
+    COUNT(r.rate)         AS votes
+  FROM movies m
+  LEFT JOIN rating r ON r.id_movies = m.id
+  GROUP BY m.id, m.title, m.year, m.genre, m.poster_url
+  ORDER BY (COUNT(r.rate) > 0) DESC, avg_score DESC, votes DESC, m.title ASC
+";
+$stmt = $conn->prepare($sql);
+$stmt->execute();
 
-  <div class="movie-list">
+$rank = 1;
+while ($row = $stmt->fetch(PDO::FETCH_ASSOC)):
+  $avg   = is_null($row['avg_score']) ? 0 : (float)$row['avg_score'];
+  $votes = (int)$row['votes'];
 
+  // สร้างสตริงดาวตามคะแนนเฉลี่ย (เกณฑ์ 0.1 เพื่อให้ 4.9 => ★★★★★, 4.8 => ★★★★☆)
+  $filled = (int) floor($avg + 0.1);
+  $filled = max(0, min(5, $filled));
+  $stars  = str_repeat('★', $filled) . str_repeat('☆', 5 - $filled);
 
-
-    <!-- 1: The Dark Knight -->
-     <?php
-     $stmt = $conn->query("SELECT * FROM movies WHERE genre = '$genreName'");
-    $stmt->execute();
-    while ($rowmovie = $stmt->fetch(PDO::FETCH_ASSOC)) {
+  $poster = $row['poster_url'] ? $row['poster_url'] : 'images/placeholder.jpg';
 ?>
-  <article class="movie-row">
-    <div class="poster">
-      <img src="<?php echo $rowmovie['poster_url']; ?>" alt="<?php echo htmlspecialchars($rowmovie['title']); ?>">
-    </div>
-    <div class="detail">
-      <div class="meta">
-        <span class="year"><?php echo $rowmovie['year']; ?></span>
-        <span class="dot">•</span>
-        <span class="duration"><?php echo $rowmovie['runtime_time']; ?></span>
-        <span class="dot">•</span>
+  <article class="rank-row">
+    <div class="rank-badge"><?= $rank++; ?></div>
+
+    <a class="postertop" href="movie.php?id=<?= (int)$row['id'] ?>">
+      <img src="<?= htmlspecialchars($poster) ?>" alt="<?= htmlspecialchars($row['title']) ?>">
+    </a>
+
+    <div class="info">
+      <h3 class="title mb-1 text-white"><?= htmlspecialchars($row['title']) ?></h3>
+      <div class="meta text-white-50">
+        <span><?= (int)$row['year'] ?></span>
+        <?php if (!empty($row['genre'])): ?> • <span><?= htmlspecialchars($row['genre']) ?></span><?php endif; ?>
       </div>
-      <h3 class="title"><?php echo $rowmovie['title']; ?></h3>
-      <p class="desc"><?php echo $rowmovie['overview']; ?></p>
-      <div class="actions">
-        <a href="#" class="btn-play"><i class="fa-solid fa-play"></i> เล่นทันที</a>
-        <button class="btn-secondary" disabled><i class="fa-solid fa-plus"></i> เพิ่มในรายการ</button>
+
+      <div class="score-line">
+        <div class="stars"><?= $stars ?></div>
+        <div class="score"><strong><?= number_format($avg, 1) ?></strong>/5.0</div>
+        <div class="votes"><?= number_format($votes) ?> โหวต</div>
       </div>
     </div>
   </article>
-<?php
-}
-?>
-  </div>
+<?php endwhile; ?>
+
 </section>
 
 
-  <!-- End Popular -->
 
 </body>
 </html>

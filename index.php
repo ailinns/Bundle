@@ -37,6 +37,8 @@
 
         <!-- animated css -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
+        <link rel="icon" type="image/x-icon" href="images/favicon.ico">
       
       </head>
 <body>
@@ -78,7 +80,7 @@
 <!-- Navbar -->
     <nav class="navbar navbar-expand-lg fixed-top">
     <div class="container-fluid">
-    <a class="navbar-brand me-auto" href="#"><img src="images/logo.PNG" class="repimg"></a>
+    <a class="navbar-brand me-auto" href="#"><img src="images/logo.PNG" width="120px" class="repimg"></a>
     
     <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
       <div class="offcanvas-header">
@@ -127,13 +129,13 @@
 
     <!-- Slide 1 -->
     <div class="carousel-item active">
-      <div class="hero-slide" style="background-image: url('images/image1.jpg');">
+      <div class="hero-slide" style="background-image: url('images/banner1.jpg');">
         <div class="hero-content">
-          <span class="hero-tag">แอคชั่น, ระทึกขวัญ</span>
-          <span class="hero-year">2008</span>
-          <h1 class="hero-title">The Dark Knight</h1>
+          <span class="hero-tag">แอคชั่น</span>
+          <span class="hero-year">2018</span>
+          <h1 class="hero-title">12 Strong</h1>
           <p class="hero-desc">
-            เมื่อความมืดมิดโถมล้อมเมืองก็อทแธม ฮีโร่ในชุดดำต้องเผชิญหน้ากับภัยคุกคามที่อันตรายที่สุด
+            เมื่อหน่วยรบพิเศษ12นายที่เก่งที่สุด ต้องไปทำภารกิจลับที่ล้อมรอบไปด้วยศัตรู
           </p>
           <div class="hero-buttons">
             <a href="#" class="btn btn-play"><i class="fa-solid fa-play"></i> เล่นทันที</a>
@@ -145,7 +147,7 @@
 
     <!-- Slide 2 -->
     <div class="carousel-item">
-      <div class="hero-slide" style="background-image: url('images/image2.jpg');">
+      <div class="hero-slide" style="background-image: url('images/banner2.jpeg');">
         <div class="hero-content">
           <span class="hero-tag">ไซไฟ, แอคชั่น</span>
           <span class="hero-year">2010</span>
@@ -181,69 +183,47 @@
   <div class="popular-grid">
     
     <!-- Card 1 -->
-    <div class="movie-card">
-      <div class="poster">
-        <img src="images/ban1.jpg" alt="Spider-Man">
-        <span class="rating"><i class="fa-solid fa-star"></i> 4.8</span>
-      </div>
-      <div class="info">
-        <h3>Spider-Man</h3>
-        <p>2023</p>
-        <span class="genre">แอคชั่น</span>
-      </div>
-    </div>
+    <?php
+// TOP 5: เรียงจากคะแนนเฉลี่ยมาก→น้อย (ถ้าไม่มีโหวตจะไปท้ายสุด)
+$sql = "
+  SELECT
+    m.id,
+    m.title,
+    m.year,
+    m.genre,
+    m.poster_url,
+    ROUND(AVG(r.rate), 2) AS avg_score,
+    COUNT(r.rate)         AS votes
+  FROM movies m
+  LEFT JOIN rating r ON r.id_movies = m.id
+  GROUP BY m.id, m.title, m.year, m.genre, m.poster_url
+  ORDER BY (COUNT(r.rate) > 0) DESC, avg_score DESC, votes DESC, m.title ASC
+  LIMIT 5
+";
+$top = $conn->prepare($sql);
+$top->execute();
 
-    <!-- Card 2 -->
-    <div class="movie-card">
-      <div class="poster">
-        <img src="images/ban2.jpg" alt="The Batman">
-        <span class="rating"><i class="fa-solid fa-star"></i> 4.7</span>
-      </div>
-      <div class="info">
-        <h3>The Batman</h3>
-        <p>2022</p>
-        <span class="genre">แอคชั่น</span>
-      </div>
+while ($row = $top->fetch(PDO::FETCH_ASSOC)):
+  $poster = $row['poster_url'] ?: 'images/placeholder.jpg';
+  $avg    = is_null($row['avg_score']) ? 0 : (float)$row['avg_score'];
+  $votes  = (int)$row['votes'];
+  $rateText = $votes > 0 ? number_format($avg, 1) : '—'; // ถ้ายังไม่มีโหวต แสดงขีด
+?>
+  <div class="movie-card">
+    <div class="poster">
+      <div class="poster ratio ratio-16x9">
+      <img src="<?php echo $poster; ?>" alt="<?php echo $rowmovie['title']; ?>">
     </div>
+      <span class="rating"><i class="fa-solid fa-star"></i> <?= $rateText ?></span>
+    </div>
+    <div class="info">
+      <h3><?= htmlspecialchars($row['title']) ?></h3>
+      <p><?= (int)$row['year'] ?></p>
+      <span class="genre"><?= htmlspecialchars($row['genre']) ?></span>
+    </div>
+  </div>
+<?php endwhile; ?>
 
-    <!-- Card 3 -->
-    <div class="movie-card">
-      <div class="poster">
-        <img src="images/ban3.jpg" alt="Dune">
-        <span class="rating"><i class="fa-solid fa-star"></i> 4.6</span>
-      </div>
-      <div class="info">
-        <h3>Dune</h3>
-        <p>2021</p>
-        <span class="genre">ไซไฟ</span>
-      </div>
-    </div>
-
-    <!-- Card 4 -->
-    <div class="movie-card">
-      <div class="poster">
-        <img src="images/ban4.jpg" alt="Top Gun">
-        <span class="rating"><i class="fa-solid fa-star"></i> 4.9</span>
-      </div>
-      <div class="info">
-        <h3>Top Gun</h3>
-        <p>2022</p>
-        <span class="genre">แอคชั่น</span>
-      </div>
-    </div>
-
-    <!-- Card 5 -->
-    <div class="movie-card">
-      <div class="poster">
-        <img src="images/ban5.jpg" alt="Avatar">
-        <span class="rating"><i class="fa-solid fa-star"></i> 4.5</span>
-      </div>
-      <div class="info">
-        <h3>Avatar</h3>
-        <p>2022</p>
-        <span class="genre">ไซไฟ</span>
-      </div>
-    </div>
 
   </div>
       </div>
@@ -258,21 +238,22 @@
       <h2 class="popular-title">หมวดหมู่</h2>
   
   <div class="chips-wrap">
-    <a href="drama.php" class="chip-btn">ดราม่า</a>
-    <a href="#" class="chip-btn">แอคชั่น</a>
-    <a href="#" class="chip-btn">ไซไฟ</a>
-    <a href="#" class="chip-btn">สยองขวัญ</a>
+  <a href="genre.php?g=drama" class="chip-btn">ดราม่า</a>
+  <a href="genre.php?g=action" class="chip-btn">แอคชั่น</a>
+  <a href="genre.php?g=scifi" class="chip-btn">ไซไฟ</a>
+  <a href="genre.php?g=horror" class="chip-btn">สยองขวัญ</a>
 
-    <a href="#" class="chip-btn">ผจญภัย</a>
-    <a href="#" class="chip-btn">ตลก</a>
-    <a href="#" class="chip-btn">ระทึกขวัญ</a>
-    <a href="#" class="chip-btn">โรแมนติก</a>
+  <a href="genre.php?g=adventure" class="chip-btn">ผจญภัย</a>
+  <a href="genre.php?g=comedy" class="chip-btn">ตลก</a>
+  <a href="genre.php?g=thriller" class="chip-btn">ระทึกขวัญ</a>
+  <a href="genre.php?g=romance" class="chip-btn">โรแมนติก</a>
 
-    <a href="#" class="chip-btn">แนวการทดลอง</a>
-    <a href="#" class="chip-btn">คอมเมดี้</a>
-    <a href="#" class="chip-btn">การแสดงผลงาน</a>
-    <a href="#" class="chip-btn">การจ้างงาน</a>
-  </div>
+  <a href="genre.php?g=experimental" class="chip-btn">แนวการทดลอง</a>
+  <a href="genre.php?g=sitcom" class="chip-btn">คอมเมดี้</a>
+  <a href="genre.php?g=performance" class="chip-btn">การแสดงผลงาน</a>
+  <a href="genre.php?g=job" class="chip-btn">การจ้างงาน</a>
+</div>
+
 
 </div>
 <br>
